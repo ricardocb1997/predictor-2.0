@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estimador de tiempo en trail</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fa;
+      --card:#ffffff;
+      --text:#1f2933;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --soft:#f9fafb;
+      --highlight:#dbeafe;
+      --highlight-border:#93c5fd;
+      --success:#dcfce7;
+      --success-border:#86efac;
+      --readonly-bg:#eef2f7;
+      --readonly-border:#cbd5e1;
+      --badge-bg:#dbeafe;
+      --badge-border:#93c5fd;
+      --badge-text:#1d4ed8;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:20px auto;
+      padding:10px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 4px 14px rgba(15,23,42,0.04);
+    }
+
+    h2{
+      margin:0 0 12px 0;
+      font-size:1rem;
+    }
+
+    .helper{
+      margin:0 0 14px 0;
+      color:var(--muted);
+      font-size:0.9rem;
+      line-height:1.45;
+    }
+
+    .top-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width: 980px){
+      .top-grid,.grid-2,.grid-3{grid-template-columns:1fr;}
+    }
+
+    .block{
+      background:var(--soft);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .block-title{
+      font-size:0.95rem;
+      font-weight:600;
+      margin-bottom:10px;
+    }
+
+    .field-label{
+      display:block;
+      font-size:0.82rem;
+      color:var(--muted);
+      margin:0 0 4px 0;
+    }
+
+    .subgrid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    .subgrid-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:8px;
+    }
+
+    @media (max-width: 560px){
+      .subgrid-2,.subgrid-3{grid-template-columns:1fr;}
+    }
+
+    input, select{
+      width:100%;
+      padding:8px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      margin-bottom:8px;
+      transition:.2s;
+      background:#fff;
+      color:var(--text);
+      font:inherit;
+    }
+
+    input[readonly]{
+      background:var(--readonly-bg);
+      color:#475569;
+      border:1px dashed var(--readonly-border);
+      font-weight:600;
+    }
+
+    .result-wrap{
+      background:#f8fafc;
+      border:1px solid var(--readonly-border);
+      border-radius:10px;
+      padding:10px;
+      margin-top:8px;
+      margin-bottom:10px;
+    }
+
+    .result-input-label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin:0 0 6px 0;
+    }
+
+    .result-input-label .field-label{
+      margin:0;
+    }
+
+    .result-badge{
+      font-size:0.72rem;
+      font-weight:600;
+      color:var(--badge-text);
+      background:var(--badge-bg);
+      border:1px solid var(--badge-border);
+      border-radius:999px;
+      padding:2px 8px;
+      white-space:nowrap;
+    }
+
+    .target-note{
+      margin:0 0 4px 0;
+      font-size:0.82rem;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .guide{
+      font-size:0.86rem;
+      color:var(--muted);
+      line-height:1.5;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+    }
+
+    .profile-note{
+      font-size:0.84rem;
+      color:var(--muted);
+      line-height:1.45;
+      margin:0;
+    }
+
+    .target-actions{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    @media (max-width: 560px){
+      .target-actions{grid-template-columns:1fr;}
+    }
+
+    button{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding:6px 10px;
+      cursor:pointer;
+      font-size:0.84rem;
+    }
+
+    button:hover{
+      background:#eef2f7;
+    }
+
+    .calc-btn{
+      width:100%;
+      border-radius:10px;
+      font-weight:600;
+      padding:10px 12px;
+    }
+
+    .actions{
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .status{
+      margin-top:12px;
+      font-size:0.9rem;
+      color:var(--text);
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    input.highlight, select.highlight{
+      background:var(--highlight);
+      border-color:var(--highlight-border);
+      box-shadow:0 0 0 3px rgba(147,197,253,0.25);
+    }
+
+    input.success, select.success{
+      background:var(--success);
+      border-color:var(--success-border);
+      box-shadow:0 0 0 3px rgba(134,239,172,0.25);
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <h2>Estimador de tiempo en trail</h2>
+    <p class="helper">
+      Introduce una carrera de referencia y una carrera objetivo. Puedes añadir una segunda referencia para mejorar la predicción.
+      El cálculo ajusta por distancia, desnivel, tecnicidad, altitud media, calor y perfil del atleta.
+    </p>
+
+    <div class="top-grid">
+      <div class="guide">
+        <strong>Guía de tecnicidad</strong><br>
+        Baja = terreno muy corrible.<br>
+        Media = sendero de montaña normal.<br>
+        Alta = terreno roto que frena bastante.<br>
+        Muy alta = terreno muy técnico.
+      </div>
+
+      <div class="block">
+        <div class="block-title">Perfil del atleta</div>
+        <label class="field-label" for="athleteProfile">Tipo de perfil</label>
+        <select id="athleteProfile">
+          <option value="balanced">Equilibrado</option>
+          <option value="speed">Más explosivo / mejor en carreras cortas</option>
+          <option value="ultra">Más resistente / mejor en ultras largas</option>
+        </select>
+        <p class="profile-note">
+          Este perfil corrige el tiempo final estimado según la duración prevista de la carrera.
+          “Explosivo” penaliza ligeramente las carreras largas. “Resistente” reduce ligeramente esa penalización.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid-2" id="mainGrid">
+
+      <div>
+        <div class="block">
+          <div class="block-title">Carrera de referencia 1</div>
+
+          <div class="subgrid-2">
+            <div>
+              <label class="field-label" for="ref1Distance">Distancia (km)</label>
+              <input id="ref1Distance" type="number" min="0" step="0.1">
+            </div>
+            <div>
+              <label class="field-label" for="ref1Elevation">Desnivel positivo (m)</label>
+              <input id="ref1Elevation" type="number" min="0" step="1">
+            </div>
+          </div>
+
+          <div class="subgrid-3">
+            <div>
+              <label class="field-label" for="ref1TimeH">Horas</label>
+              <input id="ref1TimeH" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label class="field-label" for="ref1TimeMin">Minutos</label>
+              <input id="ref1TimeMin" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label class="field-label" for="ref1TimeSec">Segundos</label>
+              <input id="ref1TimeSec" type="number" min="0" step="1">
+            </div>
+          </div>
+
+          <label class="field-label" for="ref1Technicality">Tecnicidad</label>
+          <select id="ref1Technicality">
+            <option value="low">Baja</option>
+            <option value="medium">Media</option>
+            <option value="high">Alta</option>
+            <option value="very_high">Muy alta</option>
+          </select>
+
+          <label class="field-label" for="ref1Altitude">Altitud media</label>
+          <select id="ref1Altitude">
+            <option value="low">0–1.000 m</option>
+            <option value="mid">1.000–2.000 m</option>
+            <option value="high">2.000–3.000 m</option>
+          </select>
+
+          <label class="field-label" for="ref1Heat">Calor</label>
+          <select id="ref1Heat">
+            <option value="low">Poco</option>
+            <option value="medium">Medio</option>
+            <option value="high">Alto</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button id="addRef2">Añadir carrera de referencia 2</button>
+        </div>
+
+        <div class="block hidden" id="ref2Block">
+          <div class="block-title">Carrera de referencia 2</div>
+
+          <div class="subgrid-2">
+            <div>
+              <label class="field-label" for="ref2Distance">Distancia (km)</label>
+              <input id="ref2Distance" type="number" min="0" step="0.1">
+            </div>
+            <div>
+              <label class="field-label" for="ref2Elevation">Desnivel positivo (m)</label>
+              <input id="ref2Elevation" type="number" min="0" step="1">
+            </div>
+          </div>
+
+          <div class="subgrid-3">
+            <div>
+              <label class="field-label" for="ref2TimeH">Horas</label>
+              <input id="ref2TimeH" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label class="field-label" for="ref2TimeMin">Minutos</label>
+              <input id="ref2TimeMin" type="number" min="0" step="1">
+            </div>
+            <div>
+              <label class="field-label" for="ref2TimeSec">Segundos</label>
+              <input id="ref2TimeSec" type="number" min="0" step="1">
+            </div>
+          </div>
+
+          <label class="field-label" for="ref2Technicality">Tecnicidad</label>
+          <select id="ref2Technicality">
+            <option value="low">Baja</option>
+            <option value="medium">Media</option>
+            <option value="high">Alta</option>
+            <option value="very_high">Muy alta</option>
+          </select>
+
+          <label class="field-label" for="ref2Altitude">Altitud media</label>
+          <select id="ref2Altitude">
+            <option value="low">0–1.000 m</option>
+            <option value="mid">1.000–2.000 m</option>
+            <option value="high">2.000–3.000 m</option>
+          </select>
+
+          <label class="field-label" for="ref2Heat">Calor</label>
+          <select id="ref2Heat">
+            <option value="low">Poco</option>
+            <option value="medium">Medio</option>
+            <option value="high">Alto</option>
+          </select>
+
+          <div class="actions">
+            <button id="removeRef2">Quitar carrera de referencia 2</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-title">Carrera objetivo</div>
+
+        <div class="subgrid-2">
+          <div>
+            <label class="field-label" for="targetDistance">Distancia (km)</label>
+            <input id="targetDistance" type="number" min="0" step="0.1">
+          </div>
+          <div>
+            <label class="field-label" for="targetElevation">Desnivel positivo (m)</label>
+            <input id="targetElevation" type="number" min="0" step="1">
+          </div>
+        </div>
+
+        <label class="field-label" for="targetTechnicality">Tecnicidad prevista</label>
+        <select id="targetTechnicality">
+          <option value="low">Baja</option>
+          <option value="medium">Media</option>
+          <option value="high">Alta</option>
+          <option value="very_high">Muy alta</option>
+        </select>
+
+        <label class="field-label" for="targetAltitude">Altitud media</label>
+        <select id="targetAltitude">
+          <option value="low">0–1.000 m</option>
+          <option value="mid">1.000–2.000 m</option>
+          <option value="high">2.000–3.000 m</option>
+        </select>
+
+        <label class="field-label" for="targetHeat">Calor previsto</label>
+        <select id="targetHeat">
+          <option value="low">Poco</option>
+          <option value="medium">Medio</option>
+          <option value="high">Alto</option>
+        </select>
+
+        <div class="result-wrap">
+          <div class="result-input-label">
+            <label class="field-label" for="targetTimeH">Tiempo estimado</label>
+            <span class="result-badge">Resultado automático</span>
+          </div>
+
+          <div class="subgrid-3">
+            <div>
+              <label class="field-label" for="targetTimeH">Horas</label>
+              <input id="targetTimeH" type="number" min="0" step="1" readonly>
+            </div>
+            <div>
+              <label class="field-label" for="targetTimeMin">Minutos</label>
+              <input id="targetTimeMin" type="number" min="0" step="1" readonly>
+            </div>
+            <div>
+              <label class="field-label" for="targetTimeSec">Segundos</label>
+              <input id="targetTimeSec" type="number" min="0" step="1" readonly>
+            </div>
+          </div>
+
+          <div class="target-note">
+            Estos campos no se rellenan manualmente. Se completan automáticamente al pulsar
+            <strong>Estimar tiempo</strong>.
+          </div>
+        </div>
+
+        <div class="target-actions">
+          <button class="calc-btn" id="btnEstimate">Estimar tiempo</button>
+          <button class="calc-btn" id="btnCopySummary">Copiar resumen</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="actions">
+      <button id="clearAll">Borrar todo</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+  </div>
+</div>
+
+<script>
+let currentSuccessFields = [];
+let ref2Visible = false;
+
+const TECHNICALITY_FACTORS = {
+  low: 1.00,
+  medium: 1.08,
+  high: 1.18,
+  very_high: 1.30
+};
+
+const ALTITUDE_FACTORS = {
+  low: 1.00,
+  mid: 1.04,
+  high: 1.09
+};
+
+const HEAT_FACTORS = {
+  low: 1.00,
+  medium: 1.04,
+  high: 1.09
+};
+
+const VERTICAL_EQUIVALENCE = 100;
+const MIN_COMBINED_ADJUSTMENT = 0.85;
+const MAX_COMBINED_ADJUSTMENT = 1.80;
+
+function v(id){
+  const el = document.getElementById(id);
+  const x = el.value;
+  return x === "" ? null : parseFloat(x);
+}
+
+function getSelectValue(id){
+  return document.getElementById(id).value;
+}
+
+function set(id, val){
+  document.getElementById(id).value = val;
+}
+
+function clearAllSuccess(){
+  document.querySelectorAll("input, select").forEach(el => el.classList.remove("success"));
+  currentSuccessFields = [];
+}
+
+function clearAllHighlight(){
+  document.querySelectorAll("input, select").forEach(el => el.classList.remove("highlight"));
+}
+
+function highlight(ids){
+  clearAllHighlight();
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el){
+      el.classList.add("highlight");
+      setTimeout(() => el.classList.remove("highlight"), 1000);
+    }
+  });
+}
+
+function setSuccess(ids){
+  clearAllSuccess();
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el){
+      el.classList.add("success");
+    }
+  });
+  currentSuccessFields = [...ids];
+}
+
+function handleManualEdit(){
+  clearAllSuccess();
+}
+
+function msg(t){
+  document.getElementById("status").innerText = t;
+}
+
+function kmEffort(distanceKm, elevationM){
+  return distanceKm + (elevationM / VERTICAL_EQUIVALENCE);
+}
+
+function combinedConditionFactor(technicality, altitude, heat){
+  const factor =
+    TECHNICALITY_FACTORS[technicality] *
+    ALTITUDE_FACTORS[altitude] *
+    HEAT_FACTORS[heat];
+
+  return Math.max(MIN_COMBINED_ADJUSTMENT, Math.min(MAX_COMBINED_ADJUSTMENT, factor));
+}
+
+function ultraCourseMultiplier(distanceKm, effortKm){
+  let multiplier = 1;
+
+  if (distanceKm > 60){
+    multiplier += (distanceKm - 60) * 0.0005;
+  }
+
+  if (distanceKm > 100){
+    multiplier += (distanceKm - 100) * 0.0010;
+  }
+
+  if (distanceKm > 140){
+    multiplier += (distanceKm - 140) * 0.0015;
+  }
+
+  if (effortKm > 160){
+    multiplier += Math.min((effortKm - 160) * 0.0005, 0.10);
+  }
+
+  if (effortKm > 220){
+    multiplier += Math.min((effortKm - 220) * 0.00045, 0.08);
+  }
+
+  return multiplier;
+}
+
+function extrapolationPenalty(referenceRace, targetRace){
+  const distanceRatio = targetRace.distance / referenceRace.distance;
+  const effortRatio = targetRace.effort / referenceRace.effort;
+
+  let penalty = 1;
+
+  if (distanceRatio > 1){
+    penalty *= Math.pow(distanceRatio, 0.018);
+  }
+
+  if (distanceRatio > 1.8){
+    penalty *= Math.pow(distanceRatio / 1.8, 0.025);
+  }
+
+  if (distanceRatio > 2.6){
+    penalty *= Math.pow(distanceRatio / 2.6, 0.035);
+  }
+
+  if (effortRatio > 1.2){
+    penalty *= Math.pow(effortRatio, 0.012);
+  }
+
+  return penalty;
+}
+
+function athleteProfileTimeCorrection(totalMinutes, profile){
+  const hours = totalMinutes / 60;
+
+  if (profile === "balanced"){
+    return 1;
+  }
+
+  let correction = 1;
+
+  if (profile === "speed"){
+    if (hours > 3){
+      correction += Math.min((hours - 3) * 0.0035, 0.08);
+    }
+    if (hours > 10){
+      correction += Math.min((hours - 10) * 0.0020, 0.04);
+    }
+  }
+
+  if (profile === "ultra"){
+    if (hours > 3){
+      correction -= Math.min((hours - 3) * 0.0025, 0.06);
+    }
+    if (hours > 10){
+      correction -= Math.min((hours - 10) * 0.0015, 0.03);
+    }
+  }
+
+  return correction;
+}
+
+function timeToMinutes(prefix){
+  const h = v(`${prefix}TimeH`) || 0;
+  const m = v(`${prefix}TimeMin`) || 0;
+  const s = v(`${prefix}TimeSec`) || 0;
+
+  if (h === 0 && m === 0 && s === 0) return null;
+  return h * 60 + m + s / 60;
+}
+
+function validReference(prefix){
+  const distance = v(`${prefix}Distance`);
+  const elevation = v(`${prefix}Elevation`);
+  const time = timeToMinutes(prefix);
+
+  return distance && distance > 0 && elevation != null && elevation >= 0 && time && time > 0;
+}
+
+function getRace(prefix){
+  const distance = v(`${prefix}Distance`);
+  const elevation = v(`${prefix}Elevation`);
+  const time = timeToMinutes(prefix);
+  const technicality = getSelectValue(`${prefix}Technicality`);
+  const altitude = getSelectValue(`${prefix}Altitude`);
+  const heat = getSelectValue(`${prefix}Heat`);
+  const effort = kmEffort(distance, elevation);
+  const condition = combinedConditionFactor(technicality, altitude, heat);
+  const ultra = ultraCourseMultiplier(distance, effort);
+
+  return {
+    distance,
+    elevation,
+    time,
+    technicality,
+    altitude,
+    heat,
+    effort,
+    condition,
+    ultra,
+    athleteIndex: time ? time / (effort * condition * ultra) : null
+  };
+}
+
+function getTarget(){
+  const distance = v("targetDistance");
+  const elevation = v("targetElevation");
+  const technicality = getSelectValue("targetTechnicality");
+  const altitude = getSelectValue("targetAltitude");
+  const heat = getSelectValue("targetHeat");
+  const effort = kmEffort(distance, elevation);
+  const condition = combinedConditionFactor(technicality, altitude, heat);
+  const ultra = ultraCourseMultiplier(distance, effort);
+
+  return {
+    distance,
+    elevation,
+    technicality,
+    altitude,
+    heat,
+    effort,
+    condition,
+    ultra
+  };
+}
+
+function similarityWeight(referenceRace, targetRace){
+  const distanceGap = Math.abs(Math.log(targetRace.distance / referenceRace.distance));
+  const effortGap = Math.abs(Math.log(targetRace.effort / referenceRace.effort));
+  const totalGap = distanceGap * 0.55 + effortGap * 0.45;
+  return 1 / (0.18 + totalGap);
+}
+
+function weightedAthleteIndex(references, targetRace){
+  if (references.length === 1){
+    return references[0].athleteIndex * extrapolationPenalty(references[0], targetRace);
+  }
+
+  const weights = references.map(ref => similarityWeight(ref, targetRace));
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+  return references.reduce((sum, ref, index) => {
+    const adjustedIndex = ref.athleteIndex * extrapolationPenalty(ref, targetRace);
+    return sum + adjustedIndex * (weights[index] / totalWeight);
+  }, 0);
+}
+
+function setTargetTime(totalMinutes){
+  const totalSeconds = Math.round(totalMinutes * 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  set("targetTimeH", hours);
+  set("targetTimeMin", minutes);
+  set("targetTimeSec", seconds);
+  setSuccess(["targetTimeH", "targetTimeMin", "targetTimeSec"]);
+}
+
+function estimateTime(){
+  const profile = getSelectValue("athleteProfile");
+
+  const ref1Ok = validReference("ref1");
+  const ref2Ok = ref2Visible && validReference("ref2");
+
+  if (!ref1Ok && !ref2Ok){
+    highlight(["ref1Distance", "ref1TimeH"]);
+    msg("Introduce al menos una carrera de referencia completa");
+    return;
+  }
+
+  const targetDistance = v("targetDistance");
+  const targetElevation = v("targetElevation");
+
+  if (!targetDistance || targetDistance <= 0){
+    highlight(["targetDistance"]);
+    msg("Introduce una distancia válida en la carrera objetivo");
+    return;
+  }
+
+  if (targetElevation == null || targetElevation < 0){
+    highlight(["targetElevation"]);
+    msg("Introduce un desnivel válido en la carrera objetivo");
+    return;
+  }
+
+  const targetRace = getTarget();
+  const references = [];
+
+  if (ref1Ok) references.push(getRace("ref1"));
+  if (ref2Ok) references.push(getRace("ref2"));
+
+  const athleteIndex = weightedAthleteIndex(references, targetRace);
+  const baseEstimatedMinutes = athleteIndex * targetRace.effort * targetRace.condition * targetRace.ultra;
+  const profileCorrection = athleteProfileTimeCorrection(baseEstimatedMinutes, profile);
+  const estimatedMinutes = baseEstimatedMinutes * profileCorrection;
+
+  setTargetTime(estimatedMinutes);
+
+  if (references.length === 2){
+    msg("Tiempo estimado usando dos referencias ponderadas según su similitud con la carrera objetivo");
+  } else {
+    msg("Tiempo estimado usando una referencia");
+  }
+}
+
+function clearReference2(){
+  [
+    "ref2Distance", "ref2Elevation", "ref2TimeH", "ref2TimeMin", "ref2TimeSec"
+  ].forEach(id => set(id, ""));
+
+  set("ref2Technicality", "low");
+  set("ref2Altitude", "low");
+  set("ref2Heat", "low");
+}
+
+function clearAll(){
+  document.querySelectorAll("input").forEach(i => {
+    i.value = "";
+    i.classList.remove("success");
+    i.classList.remove("highlight");
+  });
+
+  document.querySelectorAll("select").forEach(s => {
+    s.classList.remove("success");
+    s.classList.remove("highlight");
+  });
+
+  [
+    "ref1Technicality", "ref2Technicality", "targetTechnicality"
+  ].forEach(id => set(id, "low"));
+
+  [
+    "ref1Altitude", "ref2Altitude", "targetAltitude"
+  ].forEach(id => set(id, "low"));
+
+  [
+    "ref1Heat", "ref2Heat", "targetHeat"
+  ].forEach(id => set(id, "low"));
+
+  set("athleteProfile", "balanced");
+
+  ref2Visible = false;
+  document.getElementById("ref2Block").classList.add("hidden");
+  document.getElementById("addRef2").classList.remove("hidden");
+
+  currentSuccessFields = [];
+  msg("");
+}
+
+function buildSummary(){
+  const timeH = v("targetTimeH");
+  const timeMin = v("targetTimeMin");
+  const timeSec = v("targetTimeSec");
+
+  if (timeH == null && timeMin == null && timeSec == null){
+    msg("Primero calcula una estimación");
+    return null;
+  }
+
+  const lines = [];
+
+  if (validReference("ref1")){
+    lines.push(
+      "Carrera de referencia 1:",
+      `- Distancia: ${v("ref1Distance") || 0} km`,
+      `- Desnivel: ${v("ref1Elevation") || 0} m+`,
+      `- Tiempo: ${(v("ref1TimeH") || 0)}h ${(v("ref1TimeMin") || 0)}min ${(v("ref1TimeSec") || 0)}s`,
+      `- Tecnicidad: ${document.getElementById("ref1Technicality").options[document.getElementById("ref1Technicality").selectedIndex].text}`,
+      `- Altitud: ${document.getElementById("ref1Altitude").options[document.getElementById("ref1Altitude").selectedIndex].text}`,
+      `- Calor: ${document.getElementById("ref1Heat").options[document.getElementById("ref1Heat").selectedIndex].text}`,
+      ""
+    );
+  }
+
+  if (ref2Visible && validReference("ref2")){
+    lines.push(
+      "Carrera de referencia 2:",
+      `- Distancia: ${v("ref2Distance") || 0} km`,
+      `- Desnivel: ${v("ref2Elevation") || 0} m+`,
+      `- Tiempo: ${(v("ref2TimeH") || 0)}h ${(v("ref2TimeMin") || 0)}min ${(v("ref2TimeSec") || 0)}s`,
+      `- Tecnicidad: ${document.getElementById("ref2Technicality").options[document.getElementById("ref2Technicality").selectedIndex].text}`,
+      `- Altitud: ${document.getElementById("ref2Altitude").options[document.getElementById("ref2Altitude").selectedIndex].text}`,
+      `- Calor: ${document.getElementById("ref2Heat").options[document.getElementById("ref2Heat").selectedIndex].text}`,
+      ""
+    );
+  }
+
+  lines.push(
+    `Perfil del atleta: ${document.getElementById("athleteProfile").options[document.getElementById("athleteProfile").selectedIndex].text}`,
+    "",
+    "Carrera objetivo:",
+    `- Distancia: ${v("targetDistance") || 0} km`,
+    `- Desnivel: ${v("targetElevation") || 0} m+`,
+    `- Tecnicidad prevista: ${document.getElementById("targetTechnicality").options[document.getElementById("targetTechnicality").selectedIndex].text}`,
+    `- Altitud: ${document.getElementById("targetAltitude").options[document.getElementById("targetAltitude").selectedIndex].text}`,
+    `- Calor previsto: ${document.getElementById("targetHeat").options[document.getElementById("targetHeat").selectedIndex].text}`,
+    "",
+    `Tiempo estimado: ${(v("targetTimeH") || 0)}h ${(v("targetTimeMin") || 0)}min ${(v("targetTimeSec") || 0)}s`
+  );
+
+  return lines.join("\n");
+}
+
+async function copySummary(){
+  const summary = buildSummary();
+  if (!summary) return;
+
+  try {
+    await navigator.clipboard.writeText(summary);
+    msg("Resumen copiado al portapapeles");
+  } catch (e) {
+    msg("No se pudo copiar el resumen");
+  }
+}
+
+document.getElementById("btnEstimate").onclick = estimateTime;
+document.getElementById("clearAll").onclick = clearAll;
+document.getElementById("btnCopySummary").onclick = copySummary;
+
+document.getElementById("addRef2").onclick = () => {
+  ref2Visible = true;
+  document.getElementById("ref2Block").classList.remove("hidden");
+  document.getElementById("addRef2").classList.add("hidden");
+};
+
+document.getElementById("removeRef2").onclick = () => {
+  ref2Visible = false;
+  clearReference2();
+  document.getElementById("ref2Block").classList.add("hidden");
+  document.getElementById("addRef2").classList.remove("hidden");
+};
+
+document.querySelectorAll("input, select").forEach(el => {
+  el.addEventListener("input", handleManualEdit);
+  el.addEventListener("change", handleManualEdit);
+});
+</script>
+</body>
+</html>
