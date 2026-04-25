@@ -61,7 +61,7 @@
 
     .top-grid{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1fr;
       gap:12px;
       margin-bottom:12px;
     }
@@ -72,14 +72,8 @@
       gap:12px;
     }
 
-    .grid-3{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:12px;
-    }
-
     @media (max-width: 980px){
-      .top-grid,.grid-2,.grid-3{grid-template-columns:1fr;}
+      .top-grid,.grid-2{grid-template-columns:1fr;}
     }
 
     .block{
@@ -176,16 +170,6 @@
       line-height:1.45;
     }
 
-    .guide{
-      font-size:0.86rem;
-      color:var(--muted);
-      line-height:1.5;
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-    }
-
     .profile-note{
       font-size:0.84rem;
       color:var(--muted);
@@ -222,6 +206,28 @@
       border-radius:10px;
       font-weight:600;
       padding:10px 12px;
+    }
+
+    .add-ref-btn{
+      background:#dbeafe;
+      border-color:#93c5fd;
+      color:#1d4ed8;
+      font-weight:600;
+    }
+
+    .add-ref-btn:hover{
+      background:#bfdbfe;
+    }
+
+    .remove-ref-btn{
+      background:#fee2e2;
+      border-color:#fca5a5;
+      color:#b91c1c;
+      font-weight:600;
+    }
+
+    .remove-ref-btn:hover{
+      background:#fecaca;
     }
 
     .actions{
@@ -266,14 +272,6 @@
     </p>
 
     <div class="top-grid">
-      <div class="guide">
-        <strong>Guía de tecnicidad</strong><br>
-        Baja = terreno muy corrible.<br>
-        Media = sendero de montaña normal.<br>
-        Alta = terreno roto que frena bastante.<br>
-        Muy alta = terreno muy técnico.
-      </div>
-
       <div class="block">
         <div class="block-title">Perfil del atleta</div>
         <label class="field-label" for="athleteProfile">Tipo de perfil</label>
@@ -284,12 +282,12 @@
         </select>
         <p class="profile-note">
           Este perfil corrige el tiempo final estimado según la duración prevista de la carrera.
-          “Explosivo” penaliza ligeramente las carreras largas. “Resistente” reduce ligeramente esa penalización.
+          “Explosivo” penaliza las carreras largas. “Resistente” reduce esa penalización.
         </p>
       </div>
     </div>
 
-    <div class="grid-2" id="mainGrid">
+    <div class="grid-2">
 
       <div>
         <div class="block">
@@ -345,7 +343,7 @@
         </div>
 
         <div class="actions">
-          <button id="addRef2">Añadir carrera de referencia 2</button>
+          <button id="addRef2" class="add-ref-btn">Añadir carrera de referencia 2</button>
         </div>
 
         <div class="block hidden" id="ref2Block">
@@ -400,7 +398,7 @@
           </select>
 
           <div class="actions">
-            <button id="removeRef2">Quitar carrera de referencia 2</button>
+            <button id="removeRef2" class="remove-ref-btn">Quitar carrera de referencia 2</button>
           </div>
         </div>
       </div>
@@ -640,19 +638,19 @@ function athleteProfileTimeCorrection(totalMinutes, profile){
 
   if (profile === "speed"){
     if (hours > 3){
-      correction += Math.min((hours - 3) * 0.0035, 0.08);
+      correction += Math.min((hours - 3) * 0.0070, 0.16);
     }
     if (hours > 10){
-      correction += Math.min((hours - 10) * 0.0020, 0.04);
+      correction += Math.min((hours - 10) * 0.0040, 0.08);
     }
   }
 
   if (profile === "ultra"){
     if (hours > 3){
-      correction -= Math.min((hours - 3) * 0.0025, 0.06);
+      correction -= Math.min((hours - 3) * 0.0050, 0.12);
     }
     if (hours > 10){
-      correction -= Math.min((hours - 10) * 0.0015, 0.03);
+      correction -= Math.min((hours - 10) * 0.0030, 0.06);
     }
   }
 
